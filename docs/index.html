@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>Night Light BLE</title>
+    
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css" />
+
+    <script src="ble-client.js"></script>
+  </head>
+
+  <body class="bg-secondary">
+
+    <script src="https://kit.fontawesome.com/144ea921c3.js" crossorigin="anonymous"></script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
+
+    <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-dark border-bottom shadow-sm">
+      <h2 class="my-0 mr-md-auto font-weight-normal">Night Light BLE</h2>
+    </div>
+
+    <div id="not-connected" class="d-flex align-items-center flex-column">
+      <div class="mb-3">Connect to a Night Light device to get started</div>
+      <button id="btn-connect" class="btn btn-primary">Connect</button>
+    </div>
+
+    <div id="container" class="container-fluid d-none">
+      <div class="d-flex justify-content-center my-4">
+        <span class="font-weight-bold red-text mr-2 mt-1"><i class="fas fa-minus fa-2x" id="decrease-red" aria-hidden="true">&nbsp;&nbsp;</i></span>
+        <form class="range-field w-80">
+          <input id="slider-red" class="slider slider-red mt-2" type="range" min="0" max="100" />
+        </form>
+        <span class="font-weight-bold red-text ml-3 mt-1"><i class="fas fa-plus fa-2x" id="increase-red" aria-hidden="true">&nbsp;&nbsp;</i></span>
+      </div>
+      
+      <div class="d-flex justify-content-center my-4 pt-3">
+        <span class="font-weight-bold red-text mr-2 mt-1"><i class="fas fa-minus fa-2x" id="decrease-blue" aria-hidden="true">&nbsp;&nbsp;</i></span>
+        <form class="range-field w-80">
+          <input id="slider-blue" class="slider slider-blue mt-2" type="range" min="0" max="100" />
+        </form>
+        <span class="font-weight-bold red-text ml-3 mt-1"><i class="fas fa-plus fa-2x" id="increase-blue" aria-hidden="true">&nbsp;&nbsp;</i></span>
+      </div>
+
+      <div id="connected" class="d-flex align-items-center flex-column">
+        <button id="btn-disconnect" onclick="disconnect()" class="btn btn-primary">Disconnect</button>
+      </div>
+    </div>
+  </body>
+</html>
+<script>
+  /* Disconnect from peripheral and update UI */
+  function disconnect() {
+    nlBLE.disconnect();
+
+    document.getElementById("not-connected").classList.add("d-flex");
+    document.getElementById("not-connected").classList.remove("d-none");
+    document.getElementById("container").classList.add("d-none");
+  }
+
+  var nlBLE = new NightLightBLE();
+
+  var led1 = 0;
+  var led2 = 0; 
+  var lock = 0;
+
+  async function updateLeds ()
+  {
+    if (lock)
+      return;
+
+    lock = 1;
+    await nlBLE.writeLed1(led1);
+    await nlBLE.writeLed2(led2);
+    lock = 0;
+  }
+
+  document
+    .getElementById("decrease-red")
+    .addEventListener("click", async event => {
+      try {
+        if (led1 > 0)
+          led1--;
+        document.getElementById("slider-red").value = led1;
+
+        clearTimeout(updateLeds);
+        setTimeout(updateLeds, 300);
+
+      } catch (error) {
+        console.log(error.message);
+      }
+  });
+
+  document
+    .getElementById("increase-red")
+    .addEventListener("click", async event => {
+      try {
+        if (led1 < 100)
+          led1++;
+        document.getElementById("slider-red").value = led1;
+
+        clearTimeout(updateLeds);
+        setTimeout(updateLeds, 300);
+
+      } catch (error) {
+        console.log(error.message);
+      }
+  });
+
+  document
+    .getElementById("decrease-blue")
+    .addEventListener("click", async event => {
+      try {
+        if (led2 > 0)
+          led2--;
+        document.getElementById("slider-blue").value = led2;
+
+        clearTimeout(updateLeds);
+        setTimeout(updateLeds, 300);
+
+      } catch (error) {
+        console.log(error.message);
+      }
+  });
+
+  document
+    .getElementById("increase-blue")
+    .addEventListener("click", async event => {
+      try {
+        if (led2 < 100)
+          led2++;
+        document.getElementById("slider-blue").value = led2;
+
+        clearTimeout(updateLeds);
+        setTimeout(updateLeds, 300);
+
+      } catch (error) {
+        console.log(error.message);
+      }
+  });
+
+  document
+    .getElementById("slider-red")
+    .addEventListener("input", async event => {
+      try {
+        led1 = event.target.value;
+
+        clearTimeout(updateLeds);
+        setTimeout(updateLeds, 300);
+      } catch (error) {
+        console.log(error.message);
+      }
+  });
+
+  document
+    .getElementById("slider-blue")
+    .addEventListener("input", async event => {
+      try {
+        led2 = event.target.value;
+
+        clearTimeout(updateLeds);
+        setTimeout(updateLeds, 300);
+
+      } catch (error) {
+        console.log(error.message);
+      }
+  });
+
+  /* connect to peripheral, load data and add event listeners */
+  document
+    .getElementById("btn-connect")
+    .addEventListener("click", async event => {
+      try {
+        await nlBLE.request();
+        await nlBLE.connect();
+        await nlBLE.setLedCharacteristic();
+
+        document.getElementById("not-connected").classList.remove("d-flex");
+        document.getElementById("not-connected").classList.add("d-none");
+
+        led1 = await nlBLE.readLed1();
+        led2 = await nlBLE.readLed2();
+
+        document.getElementById("slider-red").value = led1;
+        document.getElementById("slider-blue").value = led2;
+
+        window.setTimeout(updateLeds, 50);
+
+        document.getElementById("container").classList.remove("d-none");
+
+      } catch (error) {
+        console.log(error.message);
+      }
+    });
+</script>
